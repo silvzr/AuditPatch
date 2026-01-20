@@ -1,0 +1,68 @@
+name: Core
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+  merge_group:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_HARDLINK: "true"
+      CCACHE_BASEDIR: "${{ github.workspace }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure Gradle properties
+        run: |
+          echo 'org.gradle.caching=true' >> ~/.gradle/gradle.properties
+          echo 'org.gradle.parallel=true' >> ~/.gradle/gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8 -XX:+UseParallelGC' >> ~/.gradle/gradle.properties
+          echo 'android.native.buildOutput=verbose' >> ~/.gradle/gradle.properties
+
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew zipRelease
+          ./gradlew zipDebug
+
+      - name: Prepare artifact
+        if: success()
+        id: prepareArtifact
+        run: |
+          AuditPatchReleaseName=`ls module/release/Audit-Patch-*-release.zip | awk -F '(/|.zip)' '{print $3}'` && echo "AuditPatchReleaseName=$AuditPatchReleaseName" >> $GITHUB_OUTPUT
+          AuditPatchDebugName=`ls module/release/Audit-Patch-*-debug.zip | awk -F '(/|.zip)' '{print $3}'` && echo "AuditPatchDebugName=$AuditPatchDebugName" >> $GITHUB_OUTPUT
+          unzip module/release/Audit-Patch-*-release.zip -d Audit-Patch-release
+          unzip module/release/Audit-Patch-*-debug.zip -d Audit-Patch-debug
+
+      - name: Upload release
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prepareArtifact.outputs.AuditPatchReleaseName }}
+          path: "./Audit-Patch-release/*"
+
+      - name: Upload debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prepareArtifact.outputs.AuditPatchDebugName }}
+          path: "./Audit-Patch-debug/*"
