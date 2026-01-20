@@ -70,11 +70,11 @@ androidComponents.onVariants { variant ->
             into(moduleDir)
             from(rootProject.layout.projectDirectory.file("README.md"))
             from(layout.projectDirectory.file("template")) {
-                exclude("module.prop", "customize.sh", "post-fs-data.sh", "service.sh", "zn_modules.txt")
+                exclude("module.prop", "customize.sh", "post-fs-data.sh")
                 filter<FixCrLfFilter>("eol" to FixCrLfFilter.CrLf.newInstance("lf"))
             }
             from(layout.projectDirectory.file("template")) {
-                include("module.prop", "zn_modules.txt")
+                include("module.prop")
                 expand(
                     "moduleId" to moduleId,
                     "moduleName" to moduleName,
@@ -83,7 +83,7 @@ androidComponents.onVariants { variant ->
                 )
             }
             from(layout.projectDirectory.file("template")) {
-                include("customize.sh", "post-fs-data.sh", "service.sh")
+                include("customize.sh", "post-fs-data.sh")
                 val tokens = mapOf(
                     "DEBUG" to if (buildTypeLowered == "debug") "true" else "false",
                     "SONAME" to moduleId,
@@ -96,6 +96,10 @@ androidComponents.onVariants { variant ->
                 val arch = abiMap[abi]
                 from(layout.buildDirectory.file("intermediates/stripped_native_libs/$variantLowered/strip${variantCapped}DebugSymbols/out/lib/$abi")) {
                     into("lib/$arch")
+                }
+                // Include pre-built linjector-cli binary
+                from(layout.projectDirectory.file("prebuilt/$arch/linjector-cli")) {
+                    into("prebuilt/$arch")
                 }
             }
 

@@ -1,12 +1,20 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(auditpatch)
 
-set(CXX_FLAGS "${CXX_FLAGS} -fno-exceptions -fno-rtti -fvisibility=hidden -fvisibility-inlines-hidden")
+set(C_FLAGS "${C_FLAGS} -fvisibility=hidden")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_FLAGS}")
 
-find_package(cxx REQUIRED CONFIG)
-link_libraries(cxx::cxx)
 
-add_library(${MODULE_NAME} SHARED hook.cpp)
-target_link_libraries(${MODULE_NAME} log)
+
+# Build LSPlt as static library
+set(LSPLT_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/LSPlt/lsplt/src/main/jni)
+
+add_library(${MODULE_NAME} SHARED hook.c)
+
+target_include_directories(${MODULE_NAME} PRIVATE 
+    external/LSPlt/lsplt/src/main/jni/include
+)
+
+target_link_libraries(${MODULE_NAME} PRIVATE log lsplt_static)
