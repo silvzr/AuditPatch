@@ -56,11 +56,14 @@ extract "$ZIPFILE" 'sepolicy.rule' "$TMPDIR"
 ui_print "- Extracting module files"
 extract "$ZIPFILE" 'module.prop'     "$MODPATH"
 extract "$ZIPFILE" 'post-fs-data.sh' "$MODPATH"
-extract "$ZIPFILE" 'service.sh'      "$MODPATH"
-extract "$ZIPFILE" 'zn_modules.txt'  "$MODPATH"
 mv "$TMPDIR/sepolicy.rule" "$MODPATH"
 
 mkdir "$MODPATH/lib"
+mkdir "$MODPATH/bin"
 
 ui_print "- Extracting $ARCH libraries"
 extract "$ZIPFILE" "lib/$ARCH/lib$SONAME.so" "$MODPATH/lib" true
+
+ui_print "- Extracting linjector-cli"
+extract "$ZIPFILE" "bin/$ARCH/linjector-cli" "$MODPATH/bin" true
+chmod +x "$MODPATH/bin/linjector-cli"

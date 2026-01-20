@@ -24,7 +24,7 @@ val moduleName by extra("Audit Patch")
 val verName by extra("v1.1.3")
 val verCode by extra(gitCommitCount)
 val commitHash by extra(gitCommitHash)
-val abiList by extra(listOf("arm64-v8a", "x86_64"))
+val abiList by extra(listOf("arm64-v8a"))
 
 val androidMinSdkVersion by extra(26)
 val androidTargetSdkVersion by extra(35)

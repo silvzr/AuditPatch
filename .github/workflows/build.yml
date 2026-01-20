@@ -24,6 +24,18 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Download linjector-cli
+        run: |
+          # Get latest release tag
+          LATEST_TAG=$(curl -s https://api.github.com/repos/erfur/linjector-rs/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "Latest linjector-rs release: $LATEST_TAG"
+          
+          # Download aarch64 binary
+          mkdir -p module/prebuilt/arm64
+          curl -L "https://github.com/erfur/linjector-rs/releases/download/${LATEST_TAG}/linjector-cli" -o module/prebuilt/arm64/linjector-cli
+          chmod +x module/prebuilt/arm64/linjector-cli
+          ls -la module/prebuilt/arm64/linjector-cli
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
